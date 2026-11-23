@@ -2,9 +2,21 @@
 
 Automated, explainable, and audit-ready Accounts Payable pipeline from PDF to decision.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine)
+
 > **Core Design Principle:**
 > *"The LLM reads and formats. Deterministic code decides."*
 > Every decision is 100% reproducible, explainable to a non-technical buyer, and tracked in an immutable audit trail.
+
+---
+
+## 🌐 24/7 Cloud Hosting for Recruiters & Evaluators
+
+Deploy this full application with 1 click to Render for permanent 24/7 availability:
+1. Fork or open this repository: [https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine](https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine)
+2. In [Render Dashboard](https://dashboard.render.com), click **New +** > **Web Service**.
+3. Select `Sanchit-Garg-4850/zamp-ap-invoice-engine`.
+4. Render automatically picks up the `Dockerfile` and launches your live URL (e.g. `https://zamp-ap-invoice-engine.onrender.com`).
 
 ---
 
