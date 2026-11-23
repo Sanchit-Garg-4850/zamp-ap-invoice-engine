@@ -11,3 +11,5 @@ data/llm_cache/
 *.log
 *.mp4
 *.mkv
+Master_LLM.md
+Case_Study.pdf

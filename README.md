@@ -1,129 +1,198 @@
-# Zamp AI Solutions Analyst — PS-1 Invoice Processing Engine
-
-Automated, explainable, and audit-ready Accounts Payable pipeline from PDF to decision.
+# Autonomous Accounts Payable (AP) Invoice Processing Engine
+### Production-Grade AI Pipeline: From Unstructured PDF to Auditable Decision
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine)
-
-> **Core Design Principle:**
-> *"The LLM reads and formats. Deterministic code decides."*
-> Every decision is 100% reproducible, explainable to a non-technical buyer, and tracked in an immutable audit trail.
-
----
-
-## 🌐 24/7 Cloud Hosting for Recruiters & Evaluators
-
-Deploy this full application with 1 click to Render for permanent 24/7 availability:
-1. Fork or open this repository: [https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine](https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine)
-2. In [Render Dashboard](https://dashboard.render.com), click **New +** > **Web Service**.
-3. Select `Sanchit-Garg-4850/zamp-ap-invoice-engine`.
-4. Render automatically picks up the `Dockerfile` and launches your live URL (e.g. `https://zamp-ap-invoice-engine.onrender.com`).
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green?logo=fastapi)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
-## 🚀 Quickstart (Running Locally)
+## 🏛️ Core Architectural Principle
 
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
+> **"The LLM reads and structures unstructured documents. Deterministic code and grounded financial policies decide."**
+
+When automating enterprise Accounts Payable (AP), standard AI implementations frequently fail in two ways:
+1. **Unconstrained LLMs:** Allowing a language model to directly "decide" whether to approve a \$50,000 disbursement introduces severe hallucination risks, non-deterministic arithmetic, and compliance failure during financial audits.
+2. **Brittle Heuristics:** Relying solely on hardcoded regex or rigid formulas shatters the moment an invoice has a multi-column layout, unbundled freight line, OCR noise, or partial purchase order drawdowns.
+
+This system resolves that dilemma through a **hybrid pipeline**: an LLM cascade extracts semantic fields with verified confidence scores, while a **deterministic 8-stage verification ladder** and a **dynamic vector RAG policy engine** evaluate math, vendor legitimacy, duplicates, and contractual tolerance bands.
+
+---
+
+## 🏗️ System Architecture
+
+```
+                    Incoming Vendor Invoice PDF
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 1: INGEST & CLASSIFICATION                                       │
+│ • Detects digital text layer vs rasterized scan                        │
+│ • Computes SHA-256 cryptographic document fingerprint                  │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 2: HYBRID EXTRACTION CASCADE                                     │
+│ • High-speed text extraction (pdfplumber)                              │
+│ • Optical Character Recognition fallback (Tesseract OCR)               │
+│ • Structured JSON extraction with field-level confidence scoring       │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 3: ARITHMETIC & SEMANTIC RAG RECONCILIATION                      │
+│ • Strict line items sum verification (Σ items = subtotal)              │
+│ • Subtotal + Tax = Total Due balance check                             │
+│ • Dynamic RAG Layer reconciles unbundled freight/discounts via policy  │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 4: VENDOR MASTER VALIDATION                                      │
+│ • Exact VAT / Tax ID matching                                          │
+│ • Fuzzy name reconciliation via RapidFuzz token-set scoring            │
+│ • Hard fraud block enforcement (BLOCKED vendor status check)           │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 5: DUPLICATE DETECTION                                           │
+│ • Exact document SHA-256 collision check                               │
+│ • Database invoice number collision lookup                             │
+│ • Levenshtein edit-distance = 1 near-duplicate typo fraud screen       │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 6: PO MATCHING & BALANCE TRACKING                                │
+│ • Explicit PO reference extraction and existence check                 │
+│ • Implicit vendor open commitment matching                             │
+│ • Real-time tracking of PO draw-down balances and partial billings     │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 7: TOLERANCE & VARIANCE EVALUATION                               │
+│ • Tiered dollar & percentage tolerance bands:                          │
+│   - Under-billing / Exact balance  →  PASS (TOL_001)                   │
+│   - Overrun ≤ $100.00              →  AUTO_PASS                        │
+│   - Overrun ≤ $500.00 and ≤ 5%     →  AUTO_PASS                        │
+│   - Overrun > 10.0% variance       →  HARD REJECT (TOL_003)            │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ STAGE 8: DECISION ENGINE & EXPLAINABILITY                              │
+│ • Priority hierarchy: REJECT > NEEDS_REVIEW > AUTO_APPROVE             │
+│ • Standardized AP Reason Codes (e.g., TOL_003, VND_001, DUP_002)       │
+│ • Counterfactual explainability ("Would approve if total were ≤ $X")   │
+│ • Auto-drafted vendor clarification email for missing data             │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+       Real-Time SSE Stream ──► Live Operator UI & Audit Dashboard
 ```
 
-*(Note: Tesseract OCR is supported out-of-the-box for scanned documents).*
+---
 
-### 2. Seed Database & Generate Test Invoices
+## 🧠 Dynamic RAG Policy Layer
+
+To handle messy real-world invoices where vendors place freight, fuel surcharges, or early payment deductions in footer notes without itemized lines, the system incorporates a **Dynamic Retrieval-Augmented Generation (RAG) Knowledge Base**:
+
+* **Semantic Vector Retrieval:** Uses TF-IDF cosine similarity search over contractual clauses and finance rules.
+* **Vendor-Scoped Boost:** Dynamically prioritizes clauses scoped to specific vendor Master Services Agreements (MSAs).
+* **Deterministic Boundary Enforcement:** Retrieved clauses supply authorized dollar and percentage ceilings (e.g., *Max $500.00 / 12%*); deterministic code enforces the ceiling.
+* **Zero-Downtime Rule Updates:** Contract amendments and policy riders can be dynamically ingested via REST API (`/api/rag/rules`) or the UI without redeploying code.
+
+---
+
+## 🧪 7 Deliberate Edge Cases & Benchmark Scenarios
+
+The engine includes 7 pre-generated realistic test invoices testable via 1-click in the UI or CLI:
+
+| # | Scenario | Test File | Failure Mode / Challenge | Pipeline Behavior | Verdict | Reason Code |
+|---|---|---|---|---|---|---|
+| **1** | **Happy Path** | `happy_path.pdf` | None (clean digital PDF) | Exact PO match, arithmetic balances, vendor verified at 100% confidence. | **`AUTO_APPROVE`** | `ALL_PASS` |
+| **2** | **Split PO Drawdown** | `split_po.pdf` | Partial billing against blanket PO | Evaluates against remaining balance ($12,000) rather than full PO amount. Recognizes valid partial fulfillment. | **`AUTO_APPROVE`** | `TOL_001` |
+| **3** | **Near-Duplicate Fraud** | `near_duplicate.pdf` | Invoice number `INV-2024-001A` vs paid `INV-2024-001` | Levenshtein edit-distance = 1 within 90-day window caught by duplicate screen. Prevents double payment. | **`NEEDS_REVIEW`** | `DUP_002` |
+| **4** | **Scanned / Missing PO** | `scanned_no_po.pdf` | Low-DPI scan, OCR noise, missing PO | Triggers Tesseract OCR fallback, matches vendor via fuzzy alias, auto-drafts vendor clarification email. | **`NEEDS_REVIEW`** | `EXT_001` |
+| **5** | **Blocked / Fraud Vendor** | `blocked_vendor.pdf` | Invoice from blacklisted entity | Vendor master lookup flags `BLOCKED` status. Pipeline halts immediately to protect company funds. | **`REJECT`** | `VND_001` |
+| **6** | **PO Cost Overrun** | `overrun_po.pdf` | Total exceeds PO budget by +40.6% | Exceeds upper variance threshold limit. Explains exact boundary condition required for approval. | **`REJECT`** | `TOL_003` |
+| **7** | **Unbundled Surcharge** | `messy_reconciled.pdf` | Subtotal + Tax ≠ Total due to $350 freight note | RAG engine semantically matches clause `FIN-POL-01` (Freight Allowance) and reconciles variance to pass. | **`AUTO_APPROVE`** | `VAL_003` |
+
+---
+
+## 📊 Operations Dashboard & Audit Capabilities
+
+* **Real-Time KPIs:** Live monitoring of Total Processed Volume, Straight-Through Processing (Auto-Approve) Rate, and Exception Review Queues.
+* **Human-in-the-Loop Override:** AP specialists can review flagged invoices, inspect side-by-side PDF previews against extracted fields, and apply an audit-logged decision override with mandatory reviewer justification notes.
+* **Cryptographic Audit Dossier:** 1-click export of an immutable JSON Audit Memo containing all stage events, execution timings, confidence scores, and rule evaluations.
+
+---
+
+## ⚡ Quickstart
+
+### Option 1: Running Locally (Python 3.11+)
+
 ```bash
+# 1. Clone repository
+git clone https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine.git
+cd zamp-ap-invoice-engine
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Seed database & generate test PDFs
 python scripts/seed.py
 python scripts/make_invoices.py
-```
 
-### 3. Run Pipeline Smoke Test (All 4 Scenarios)
-```bash
+# 4. Run automated test suite
 python scripts/smoke_test.py
-```
 
-### 4. Start the Web Server & UI
-```bash
+# 5. Start the application
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Open your browser at:
-- **Live Run View:** [http://localhost:8000/](http://localhost:8000/)
-- **Dashboard & Audit History:** [http://localhost:8000/dashboard](http://localhost:8000/dashboard)
+Open **[http://localhost:8000](http://localhost:8000)** for the Live Run View, or **[http://localhost:8000/dashboard](http://localhost:8000/dashboard)** for the Operations Dashboard.
 
----
+### Option 2: Running with Docker
 
-## 🏗️ Architecture & Pipeline Stages
-
-```
-                Incoming Vendor Invoice PDF
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 1. INGEST           SHA-256 hash, PDF text layer detection │
-│ 2. EXTRACT          pdfplumber + Tesseract OCR + LLM fallback│
-│ 3. VALIDATE         Arithmetic checks (lines, subtotal, tax)│
-│ 4. VENDOR MATCH     rapidfuzz token matching against master │
-│ 5. DUPLICATE CHECK  Exact hash, exact inv#, Levenshtein dist│
-│ 6. PO MATCH         Explicit lookup & candidate ranking     │
-│ 7. TOLERANCE CHECK  Variance check vs PO remaining balance  │
-│ 8. DECISION ENGINE  Auditable ladder: REJECT > REVIEW > PASS│
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-     Live SSE Stream ──► Web UI & Operator Dashboard
+```bash
+docker build -t zamp-invoice-engine .
+docker run -p 8000:8000 zamp-invoice-engine
 ```
 
-Each stage emits structured JSON events over **Server-Sent Events (SSE)** in real time.
+---
+
+## 🔌 API Reference
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/run` | `POST` | Upload PDF invoice; streams 8-stage verification pipeline via Server-Sent Events (SSE). |
+| `/api/run-sample/{filename}` | `POST` | Execute one of the 7 prepared benchmark invoices with live SSE streaming. |
+| `/api/runs` | `GET` | List historic invoice runs with decision status, primary reasons, and metadata. |
+| `/api/runs/{id}` | `GET` | Retrieve complete execution trace and stage event payload for a specific run. |
+| `/api/runs/{id}/override` | `POST` | Submit human reviewer override with required justification note. |
+| `/api/runs/{id}/export` | `GET` | Export complete auditable JSON memo for ERP integration. |
+| `/api/rag/rules` | `GET`, `POST` | Read or dynamically register contractual policy clauses and vendor riders. |
+| `/api/rag/search` | `POST` | Perform semantic vector similarity search against active policy clauses. |
+| `/api/reset-db` | `POST` | Reset and re-seed the SQLite database to clean benchmark state. |
 
 ---
 
-## 🧪 7 Deliberate Edge Cases (1-Click Run in UI)
+## 🛠️ Technology Stack
 
-| # | Scenario | Challenge | Pipeline Behavior | Final Verdict |
-|---|---|---|---|---|
-| **1** | **Happy Path** (`happy_path.pdf`) | Clean digital PDF, explicit PO reference, exact vendor name, amount within tolerance. | Exact PO match, tolerance variance +0.0%, all arithmetic checks pass. | **AUTO_APPROVE** ✅ |
-| **2** | **Split PO** (`split_po.pdf`) | Second invoice against `PO-2024-007` ($20,000 total, $8,000 previously billed). | Evaluates against remaining balance ($12,000) rather than full PO amount. | **AUTO_APPROVE** ✅ |
-| **3** | **Near-Duplicate** (`near_duplicate.pdf`) | Same vendor, same amount ($5,750), same date (2024-04-10), invoice number `INV-TP-2202` vs prior `INV-TP-2201`. | Caught by `DUP_002` (Levenshtein distance = 1). Flags potential fraud / double-billing. | **NEEDS_REVIEW** ⚠️ |
-| **4** | **Scanned / No PO** (`scanned_no_po.pdf`) | Rasterized image-only PDF with noise, vendor alias ("Global Log Co"), missing PO reference. | Activates OCR fallback, resolves vendor via alias fuzzy match, flags missing PO, auto-drafts vendor email. | **NEEDS_REVIEW** ⚠️ |
-| **5** | **Blocked Vendor** (`blocked_vendor.pdf`) | Invoice submitted by "Fraudster Corp", which is flagged as `blocked` in the vendor master. | Stage 4 (Vendor Check) catches `VND_001` (Blocked Vendor status) and halts immediately. | **REJECT** ❌ |
-| **6** | **PO Overrun** (`overrun_po.pdf`) | Invoice total $4,500 against PO `PO-2024-005` ($3,200 limit) — a +40.6% price overrun. | Stage 7 (Tolerance) catches `TOL_003` (exceeds upper variance threshold limit). | **REJECT** ❌ |
-| **7** | **Unbundled Surcharge (RAG Policy)** (`messy_reconciled.pdf`) | Invoice total $8,450 vs subtotal $8,100 (+$350 discrepancy from unbundled freight in footer text). | RAG Policy Reconciler maps discrepancy to enterprise policy `FIN-POL-01` (Freight Allowance) and verifies allowable adjustment. | **AUTO_APPROVE** ✅ |
-
-*Bonus: Resubmitting any previously approved PDF triggers `DUP_001` (Exact File Hash match) and is instantly **REJECTED** ❌.*
+* **Backend:** Python 3.11, FastAPI, Uvicorn, SQLite, Pydantic v2
+* **Document Processing:** `pdfplumber` (digital extraction), `pytesseract` (OCR), `pymupdf` (rendering), `reportlab` (synthetic generation)
+* **NLP & Matching:** `RapidFuzz` (token-set vendor matching), Levenshtein distance (duplicate detection), TF-IDF vector cosine indexing (RAG)
+* **LLM Engine:** Groq API (`llama-3.3-70b-versatile` / `llama-3.1-8b-instant`) with deterministic offline mock fallback
+* **Frontend:** Vanilla HTML5, CSS3, JavaScript (zero-build architecture, responsive dark theme, SSE streaming)
+* **Containerization:** Docker multi-stage build, Render Blueprint (`render.yaml`)
 
 ---
 
-## 📜 Enterprise Finance Policy Ruleset (RAG Utility)
+## 📄 License
 
-Mutable enterprise financial policies are stored in `data/finance_policies.json` and can be inspected via the **📜 Finance Rulesets (RAG)** button in the UI:
-* **`FIN-POL-01`**: Standard Logistics & Freight Allowance (up to 12% / $500 max).
-* **`FIN-POL-02`**: Fuel Surcharge & Handling Adjustment (up to 10% / $350 max).
-* **`FIN-POL-03`**: Early Settlement & Volume Credit (up to 15% / $1,000 max).
-* **`FIN-POL-04`**: Compound & Municipal Tax Buffer (up to 1.5% / $50 max).
-
----
-
-## 📊 Deliverables & Features
-
-1. **Live Run View (`/`)**:
-   - Interactive drag-and-drop PDF uploader + 1-click sample invoice buttons.
-   - Real-time stage cards lighting up as SSE events arrive (OK / WARN / FAIL / RUNNING).
-   - Side panel showing extracted fields with provenance tags (`regex`, `ocr`, `llm`, `cache`).
-   - Counterfactual reasoning banner (*"Would auto-approve if total were ≤ $X"*).
-   - Auto-generated vendor email draft for missing information with one-click copy.
-
-2. **Operations Dashboard (`/dashboard`)**:
-   - Top KPI cards: Total Runs, Auto-Approved, Needs Review, Rejected, Straight-Through Processing %.
-   - Filterable runs table with search by invoice #, vendor, or reason code.
-   - Interactive modal to inspect full 8-stage audit logs.
-   - **Human-in-the-Loop Override:** AP auditors can override decisions with reasons logged into the audit trail.
-
----
-
-## ⚙️ Configuration & Reason Codes (`app/rules.yaml`)
-
-Thresholds are configurable without touching code and are snapshotted on every run:
-- `EXT_001`: Missing critical field (invoice number, date, or total)
-- `VAL_001` / `VAL_002`: Line item or tax arithmetic mismatch
-- `VND_001` / `VND_002`: Vendor not in master or fuzzy match below threshold
-- `DUP_001` / `DUP_002`: Exact or near-duplicate invoice detected
-- `PO_001` / `PO_002`: PO missing, not found, or implied match
-- `TOL_001` / `TOL_002` / `TOL_003`: Variance tolerance bands (OK, Review, Reject)
+This project is licensed under the MIT License.
