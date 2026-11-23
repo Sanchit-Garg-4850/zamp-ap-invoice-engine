@@ -1,0 +1,47 @@
+{
+  "version": "2.4.0",
+  "description": "Enterprise Accounts Payable Policy Ruleset & Surcharge Allowances",
+  "last_updated": "2026-11-23",
+  "policies": [
+    {
+      "policy_id": "FIN-POL-01",
+      "category": "freight_and_shipping",
+      "name": "Standard Logistics & Freight Allowance",
+      "description": "Unbundled freight, shipping, LTL transport, and liftgate charges are allowable adjustments if indicated in invoice lines or notes.",
+      "max_allowance_pct": 12.0,
+      "max_allowance_usd": 500.0,
+      "keywords": ["freight", "shipping", "delivery", "ltl", "carrier fee", "transportation", "liftgate"],
+      "action": "AUTO_RECONCILE_PASS"
+    },
+    {
+      "policy_id": "FIN-POL-02",
+      "category": "fuel_and_materials",
+      "name": "Fuel Surcharge & Handling Adjustment",
+      "description": "Fuel surcharges and hazardous material handling up to 10% are permitted for logistics and manufacturing vendors.",
+      "max_allowance_pct": 10.0,
+      "max_allowance_usd": 350.0,
+      "keywords": ["fuel surcharge", "handling", "fuel fee", "hazmat fee", "packaging"],
+      "action": "AUTO_RECONCILE_PASS"
+    },
+    {
+      "policy_id": "FIN-POL-03",
+      "category": "discounts_and_credits",
+      "name": "Early Settlement & Volume Credit",
+      "description": "Pre-agreed vendor volume rebates, promotional credits, and early settlement deductions (e.g. 2/10 Net 30) are approved reductions.",
+      "max_allowance_pct": 15.0,
+      "max_allowance_usd": 1000.0,
+      "keywords": ["discount", "early payment", "rebate", "promotional credit", "volume discount", "courtesy credit"],
+      "action": "AUTO_RECONCILE_PASS"
+    },
+    {
+      "policy_id": "FIN-POL-04",
+      "category": "tax_jurisdiction",
+      "name": "Compound & Municipal Tax Buffer",
+      "description": "Permits up to 1.5% discrepancy arising from local municipal sales taxes, county surcharges, or fractional cent rounding.",
+      "max_allowance_pct": 1.5,
+      "max_allowance_usd": 50.0,
+      "keywords": ["municipal tax", "county tax", "sales tax", "rounding", "vat adjustment", "fractional"],
+      "action": "AUTO_RECONCILE_PASS"
+    }
+  ]
+}

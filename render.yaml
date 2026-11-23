@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: zamp-ap-invoice-engine
+    env: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: LLM_PROVIDER
+        value: "mock"

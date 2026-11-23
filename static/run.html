@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zamp — AI Invoice Processing Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Nav */
+    header {
+      background: rgba(17, 24, 39, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    nav { display: flex; align-items: center; gap: 12px; }
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    nav a.active, nav a:hover {
+      color: #fff;
+      background: var(--card-border);
+    }
+
+    .pace-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1f293d;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      border: 1px solid #374151;
+    }
+    .pace-selector select {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.78rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 24px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Hero Panel: Upload + 6 Prepared Scenarios */
+    .hero-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 960px) {
+      .hero-panel { grid-template-columns: 1fr; }
+    }
+
+    .dropzone {
+      border: 2px dashed #374151;
+      border-radius: 12px;
+      padding: 26px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(31, 41, 55, 0.3);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.08);
+    }
+    .dropzone input { display: none; }
+    .dropzone-icon {
+      font-size: 2rem;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+    .dropzone h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .dropzone p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .sample-invoices h4 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .sample-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 768px) {
+      .sample-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .sample-btn {
+      background: #1f293d;
+      border: 1px solid #374151;
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sample-btn:hover {
+      border-color: var(--accent);
+      background: #27354f;
+      transform: translateY(-1px);
+    }
+    .sample-btn strong { font-size: 0.82rem; }
+    .sample-btn span.badge {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    /* Live Run Grid */
+    .run-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 1024px) {
+      .run-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Verdict Banner */
+    .verdict-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .verdict-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .verdict-pill {
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .verdict-pill.APPROVE { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .verdict-pill.REVIEW  { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .verdict-pill.REJECT  { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    .verdict-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-export-memo {
+      background: #1f293d;
+      border: 1px solid #374151;
+      color: #93c5fd;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-export-memo:hover { background: #27354f; }
+
+    .verdict-trace {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      background: #0d121f;
+      border: 1px solid #1e2738;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-top: 10px;
+      color: #93c5fd;
+      line-height: 1.6;
+    }
+    .verdict-counterfactual {
+      font-size: 0.86rem;
+      margin-top: 10px;
+      color: #e2e8f0;
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Stage Execution Cards */
+    .stage-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stage-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: all 0.25s;
+    }
+    .stage-card.running {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+    }
+    .stage-card.ok { border-left: 4px solid var(--success); }
+    .stage-card.warn { border-left: 4px solid var(--warning); }
+    .stage-card.fail { border-left: 4px solid var(--danger); }
+
+    .stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .stage-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stage-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1f293d;
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .stage-name { font-weight: 600; font-size: 0.9rem; }
+    .stage-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+    }
+    .stage-status-badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-ok { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+    .badge-warn { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+    .badge-fail { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+    .badge-running { background: rgba(59, 130, 246, 0.18); color: #60a5fa; }
+    .badge-pending { background: #1f293d; color: #6b7280; }
+
+    .stage-body {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #1f293d;
+      font-size: 0.82rem;
+      display: none;
+    }
+    .stage-body.expanded { display: block; }
+    .check-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 5px 0;
+      border-bottom: 1px dashed #1e293b;
+    }
+    .check-desc { color: #d1d5db; font-size: 0.8rem; }
+    .check-res { font-weight: 600; font-size: 0.75rem; font-family: var(--mono); }
+
+    .text-green { color: #34d399; }
+    .text-yellow { color: #fbbf24; }
+    .text-red { color: #f87171; }
+
+    /* Side Panel: Tabs for Fields vs PDF Preview */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .side-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .side-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .tabs-wrap {
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #1f293d;
+      color: #fff;
+    }
+
+    .fields-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .fields-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #1f293d;
+      vertical-align: middle;
+    }
+    .fields-table td:first-child {
+      color: var(--text-muted);
+      width: 42%;
+    }
+    .fields-table td:last-child {
+      font-family: var(--mono);
+      color: #fff;
+      text-align: right;
+    }
+    .provenance-tag {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #1f293d;
+      color: #93c5fd;
+      margin-left: 6px;
+      font-family: var(--mono);
+      display: inline-block;
+    }
+
+    .pdf-preview-box {
+      display: none;
+      width: 100%;
+      height: 480px;
+      border: 1px solid #1f293d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .pdf-preview-box iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #1f293d;
+    }
+
+    .email-box {
+      background: #0d121f;
+      border: 1px solid #1e2738;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .copy-btn {
+      background: #1f293d;
+      border: 1px solid #374151;
+      color: var(--text);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: #374151; }
+
+    .spinner {
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: #1f293d;
+      font-weight: 600;
+      border: 1px solid #374151;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>Zamp</span>
+      <span class="brand-badge">AP AI Engine</span>
+      <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 400; margin-left: 6px;">PS-1: PDF to Decision</span>
+    </div>
+    <nav>
+      <div class="pace-selector">
+        <span>Execution Pace:</span>
+        <select id="paceSelect">
+          <option value="paced" selected>⏱️ Paced (Demo Mode)</option>
+          <option value="fast">⚡ Instant (Full Speed)</option>
+        </select>
+      </div>
+      <button class="btn-export-memo" style="color:#60a5fa;border-color:#2563eb;" onclick="openPolicyModal()">📜 Finance Rulesets (RAG)</button>
+      <a href="/" class="active">Live Run View</a>
+      <a href="/dashboard">Dashboard & History</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero / Upload / Samples -->
+    <section class="hero-panel">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".pdf">
+        <div class="dropzone-icon">📄</div>
+        <h3>Upload Vendor Invoice PDF</h3>
+        <p>Drag and drop any PDF here, or click to browse</p>
+      </div>
+
+      <div class="sample-invoices">
+        <h4>
+          <span>Prepared Test Scenarios (1-Click Run)</span>
+          <span style="font-weight:400;text-transform:none;color:#60a5fa;">Click any scenario to execute live</span>
+        </h4>
+        <div class="sample-grid">
+          <button class="sample-btn" onclick="runSample('happy_path.pdf')">
+            <strong>1. Happy Path</strong>
+            <span class="badge">Clean PDF, exact PO, within tolerance</span>
+          </button>
+          <button class="sample-btn" onclick="runSample('split_po.pdf')">
+            <strong>2. Split PO</strong>
+            <span class="badge">Remaining balance verification</span>
+          </button>
+          <button class="sample-btn" onclick="runSample('near_duplicate.pdf')">
+            <strong>3. Near-Duplicate</strong>
+            <span class="badge">Levenshtein edit-dist 1 detection</span>
+          </button>
+          <button class="sample-btn" onclick="runSample('scanned_no_po.pdf')">
+            <strong>4. Scanned / No PO</strong>
+            <span class="badge">OCR fallback, fuzzy vendor & email</span>
+          </button>
+          <button class="sample-btn" onclick="runSample('blocked_vendor.pdf')">
+            <strong>5. Blocked Vendor</strong>
+            <span class="badge">Fraud check: Fraudster Corp</span>
+          </button>
+          <button class="sample-btn" onclick="runSample('overrun_po.pdf')">
+            <strong>6. PO Overrun</strong>
+            <span class="badge">+40.6% over PO variance limit</span>
+          </button>
+          <button class="sample-btn" style="border-color:#2563eb;" onclick="runSample('messy_reconciled.pdf')">
+            <strong style="color:#60a5fa;">7. Surcharge RAG Pass</strong>
+            <span class="badge">Unbundled freight reconciled via FIN-POL-01</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Run Progress & Results -->
+    <div class="run-grid">
+      <!-- Left: Execution Pipeline -->
+      <div>
+        <!-- Verdict Banner -->
+        <div class="verdict-card" id="verdictCard">
+          <div class="verdict-header">
+            <div>
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Run Verdict</span>
+              <div id="verdictPill" class="verdict-pill APPROVE">✅ AUTO APPROVE</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="verdict-actions">
+                <button class="btn-export-memo" onclick="exportCurrentMemo()">📥 Export Audit Memo</button>
+              </div>
+              <div style="margin-top:4px;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Primary Rule: </span>
+                <span id="primaryReason" style="font-family: var(--mono); font-weight: 600; font-size: 0.88rem; color: #fff;">ALL_PASS</span>
+              </div>
+            </div>
+          </div>
+          <div id="counterfactual" class="verdict-counterfactual" style="display:none;"></div>
+          <div id="verdictTrace" class="verdict-trace"></div>
+        </div>
+
+        <!-- Stage Cards List -->
+        <div class="stage-list" id="stageList">
+          <div class="stage-card" id="card-ingest">
+            <div class="stage-header" onclick="toggleStage('card-ingest')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">1</span>
+                <span class="stage-name">Ingest & PDF Classification</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-ingest">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-ingest">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-ingest"></div>
+          </div>
+
+          <div class="stage-card" id="card-extract">
+            <div class="stage-header" onclick="toggleStage('card-extract')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">2</span>
+                <span class="stage-name">Hybrid Extraction (pdfplumber + OCR + LLM)</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-extract">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-extract">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-extract"></div>
+          </div>
+
+          <div class="stage-card" id="card-validate">
+            <div class="stage-header" onclick="toggleStage('card-validate')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">3</span>
+                <span class="stage-name">Arithmetic & Completeness Validation</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-validate">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-validate">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-validate"></div>
+          </div>
+
+          <div class="stage-card" id="card-vendor_check">
+            <div class="stage-header" onclick="toggleStage('card-vendor_check')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">4</span>
+                <span class="stage-name">Approved Vendor Master Match</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-vendor_check">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-vendor_check">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-vendor_check"></div>
+          </div>
+
+          <div class="stage-card" id="card-duplicate_check">
+            <div class="stage-header" onclick="toggleStage('card-duplicate_check')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">5</span>
+                <span class="stage-name">Exact & Near-Duplicate Detection</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-duplicate_check">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-duplicate_check">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-duplicate_check"></div>
+          </div>
+
+          <div class="stage-card" id="card-po_match">
+            <div class="stage-header" onclick="toggleStage('card-po_match')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">6</span>
+                <span class="stage-name">Purchase Order Match & Remaining Balance</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-po_match">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-po_match">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-po_match"></div>
+          </div>
+
+          <div class="stage-card" id="card-tolerance_check">
+            <div class="stage-header" onclick="toggleStage('card-tolerance_check')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">7</span>
+                <span class="stage-name">Tolerance & Variance Rules Engine</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-tolerance_check">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-tolerance_check">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-tolerance_check"></div>
+          </div>
+
+          <div class="stage-card" id="card-decision">
+            <div class="stage-header" onclick="toggleStage('card-decision')">
+              <div class="stage-title-wrap">
+                <span class="stage-num">8</span>
+                <span class="stage-name">Auditable Decision Engine</span>
+              </div>
+              <div class="stage-meta">
+                <span class="stage-time" id="time-decision">--</span>
+                <span class="stage-status-badge badge-pending" id="badge-decision">Pending</span>
+              </div>
+            </div>
+            <div class="stage-body" id="body-decision"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Side Panel (Tabs: Extracted Fields vs PDF Preview) -->
+      <div class="side-panel">
+        <div class="side-card">
+          <div class="side-card-header">
+            <div class="tabs-wrap">
+              <button class="tab-btn active" id="tabFields" onclick="switchSideTab('fields')">Extracted Fields</button>
+              <button class="tab-btn" id="tabPdf" onclick="switchSideTab('pdf')">📄 PDF Preview</button>
+            </div>
+            <span id="provenanceConfidence" style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);"></span>
+          </div>
+
+          <!-- Fields View -->
+          <div id="fieldsView">
+            <table class="fields-table">
+              <tbody id="fieldsTableBody">
+                <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 24px 0;">Run an invoice to view extracted fields</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- PDF Preview View -->
+          <div id="pdfView" class="pdf-preview-box">
+            <iframe id="pdfFrame" src="about:blank"></iframe>
+          </div>
+        </div>
+
+        <!-- Vendor Email Draft -->
+        <div class="side-card" id="emailCard" style="display: none;">
+          <div class="side-card-header">
+            <span style="font-weight:600;font-size:0.9rem;">Auto-Drafted Vendor Email</span>
+            <button class="copy-btn" onclick="copyEmail()">📋 Copy</button>
+          </div>
+          <div class="email-box" id="emailContent"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const STAGES = ['ingest', 'extract', 'validate', 'vendor_check', 'duplicate_check', 'po_match', 'tolerance_check', 'decision'];
+    let lastRunDoneData = null;
+    let eventQueue = [];
+    let isProcessingQueue = false;
+
+    // Drag and drop setup
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) uploadFile(e.target.files[0]);
+    });
+
+    function switchSideTab(tab) {
+      document.getElementById('tabFields').classList.toggle('active', tab === 'fields');
+      document.getElementById('tabPdf').classList.toggle('active', tab === 'pdf');
+      document.getElementById('fieldsView').style.display = tab === 'fields' ? 'block' : 'none';
+      document.getElementById('pdfView').style.display = tab === 'pdf' ? 'block' : 'none';
+    }
+
+    function resetUI() {
+      lastRunDoneData = null;
+      eventQueue = [];
+      isProcessingQueue = false;
+
+      document.getElementById('verdictCard').style.display = 'none';
+      document.getElementById('emailCard').style.display = 'none';
+      document.getElementById('counterfactual').style.display = 'none';
+      document.getElementById('fieldsTableBody').innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 24px 0;">Processing invoice...</td></tr>';
+      
+      STAGES.forEach(s => {
+        const card = document.getElementById(`card-${s}`);
+        const badge = document.getElementById(`badge-${s}`);
+        const timeEl = document.getElementById(`time-${s}`);
+        const bodyEl = document.getElementById(`body-${s}`);
+        
+        card.className = 'stage-card';
+        badge.className = 'stage-status-badge badge-pending';
+        badge.textContent = 'Pending';
+        timeEl.textContent = '--';
+        bodyEl.className = 'stage-body';
+        bodyEl.innerHTML = '';
+      });
+    }
+
+    function toggleStage(cardId) {
+      const card = document.getElementById(cardId);
+      const body = card.querySelector('.stage-body');
+      body.classList.toggle('expanded');
+    }
+
+    function setPreviewPdf(url) {
+      const frame = document.getElementById('pdfFrame');
+      frame.src = url;
+    }
+
+    async function runSample(filename) {
+      resetUI();
+      setPreviewPdf(`/api/invoices/${filename}`);
+      try {
+        const response = await fetch(`/api/run-sample/${filename}`, { method: 'POST' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        streamResponse(response);
+      } catch (e) {
+        console.error('Run sample error:', e);
+        alert('Failed to run sample: ' + e.message);
+      }
+    }
+
+    async function uploadFile(file) {
+      resetUI();
+      setPreviewPdf(URL.createObjectURL(file));
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const response = await fetch('/api/run', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        streamResponse(response);
+      } catch (err) {
+        console.error('Run failed:', err);
+        alert('Failed to start run: ' + err.message);
+      }
+    }
+
+    function streamResponse(response) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      function read() {
+        reader.read().then(({ done, value }) => {
+          if (done) return;
+          buffer += decoder.decode(value, { stream: true });
+          const blocks = buffer.split('\n\n');
+          buffer = blocks.pop();
+
+          blocks.forEach(block => {
+            if (!block.trim()) return;
+            let eventType = 'message';
+            let eventData = {};
+
+            block.split('\n').forEach(line => {
+              if (line.startsWith('event:')) eventType = line.slice(6).trim();
+              if (line.startsWith('data:')) {
+                try { eventData = JSON.parse(line.slice(5).trim()); } catch (e) {}
+              }
+            });
+
+            enqueueEvent(eventType, eventData);
+          });
+          read();
+        });
+      }
+      read();
+    }
+
+    function enqueueEvent(eventType, eventData) {
+      const pace = document.getElementById('paceSelect').value;
+      if (pace === 'fast') {
+        handleSSE(eventType, eventData);
+      } else {
+        eventQueue.push({ eventType, eventData });
+        if (!isProcessingQueue) processQueue();
+      }
+    }
+
+    function processQueue() {
+      if (!eventQueue.length) {
+        isProcessingQueue = false;
+        return;
+      }
+      isProcessingQueue = true;
+      const { eventType, eventData } = eventQueue.shift();
+      handleSSE(eventType, eventData);
+
+      const delay = eventType.includes('start') ? 200 : 300;
+      setTimeout(processQueue, delay);
+    }
+
+    function handleSSE(eventType, data) {
+      if (eventType === 'stage_start') {
+        const stage = data.stage;
+        const card = document.getElementById(`card-${stage}`);
+        const badge = document.getElementById(`badge-${stage}`);
+        if (card && badge) {
+          card.classList.add('running');
+          badge.className = 'stage-status-badge badge-running';
+          badge.innerHTML = '<span class="spinner"></span> Running';
+        }
+      } else if (eventType === 'stage_done') {
+        renderStageDone(data);
+      } else if (eventType === 'run_done') {
+        lastRunDoneData = data;
+        renderRunDone(data);
+      }
+    }
+
+    function renderStageDone(data) {
+      const stage = data.stage;
+      const card = document.getElementById(`card-${stage}`);
+      const badge = document.getElementById(`badge-${stage}`);
+      const timeEl = document.getElementById(`time-${stage}`);
+      const bodyEl = document.getElementById(`body-${stage}`);
+
+      if (!card) return;
+      card.classList.remove('running');
+      card.classList.add(data.status);
+
+      badge.className = `stage-status-badge badge-${data.status}`;
+      badge.textContent = data.status.toUpperCase();
+      timeEl.textContent = `${data.duration_ms}ms`;
+
+      let html = '';
+      if (data.checks && data.checks.length) {
+        data.checks.forEach(c => {
+          const resClass = c.result === 'PASS' ? 'text-green' : (c.result === 'REJECT' ? 'text-red' : 'text-yellow');
+          let policyBadge = '';
+          if (c.policy_id) {
+            policyBadge = `<span style="background:rgba(16,185,129,0.2);color:#34d399;padding:1px 6px;border-radius:4px;font-size:0.7rem;margin-left:6px;border:1px solid rgba(16,185,129,0.4);">📜 Policy ${c.policy_id}</span>`;
+          }
+          html += `
+            <div class="check-row">
+              <div class="check-desc">
+                <strong>${c.rule_id || 'CHECK'}:</strong> ${c.detail || c.desc || ''} ${policyBadge}
+              </div>
+              <div class="check-res ${resClass}">[${c.result}]</div>
+            </div>`;
+        });
+      }
+
+      if (stage === 'ingest') {
+        html += `<div style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;">Document Type: <strong>${data.pdf_type.toUpperCase()}</strong> | SHA-256: <code>${data.file_hash.slice(0, 16)}...</code></div>`;
+      } else if (stage === 'extract') {
+        html += `<div style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;">Text Source: <strong>${data.text_source}</strong> | LLM: <strong>${data.llm_source}</strong> | Model Confidence: <strong>${Math.round(data.confidence * 100)}%</strong></div>`;
+        renderFields(data.fields, data.provenance, data.confidence);
+      } else if (stage === 'vendor_check') {
+        html += `<div style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;">Matched Vendor: <strong>${data.matched_vendor_name || 'None'}</strong> (Match Score: ${data.match_score || 0}%)</div>`;
+      } else if (stage === 'po_match') {
+        html += `<div style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;">Matched PO: <strong>${data.matched_po || 'None'}</strong> | PO Balance: <strong>$${(data.po_remaining || 0).toLocaleString()}</strong> | Method: ${data.match_method}</div>`;
+      }
+
+      bodyEl.innerHTML = html;
+      bodyEl.classList.add('expanded');
+    }
+
+    function renderFields(fields, provenance, confidence) {
+      const tbody = document.getElementById('fieldsTableBody');
+      const confEl = document.getElementById('provenanceConfidence');
+      confEl.textContent = `Confidence: ${Math.round(confidence * 100)}%`;
+
+      const displayKeys = [
+        ['Vendor Name', 'vendor_name'],
+        ['Invoice Number', 'invoice_number'],
+        ['Invoice Date', 'invoice_date'],
+        ['PO Reference', 'po_reference'],
+        ['Currency', 'currency'],
+        ['Subtotal', 'subtotal'],
+        ['Tax Amount', 'tax_amount'],
+        ['Total Due', 'total'],
+        ['Payment Terms', 'payment_terms']
+      ];
+
+      let html = '';
+      displayKeys.forEach(([label, key]) => {
+        let val = fields[key];
+        if (val === null || val === undefined) val = '<span style="color:#6b7280;">null</span>';
+        else if (typeof val === 'number') val = `$${val.toLocaleString()}`;
+        
+        const prov = provenance && provenance[key] ? `<span class="provenance-tag">${provenance[key]}</span>` : '';
+        html += `<tr><td>${label}</td><td>${val} ${prov}</td></tr>`;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    function renderRunDone(data) {
+      const card = document.getElementById('verdictCard');
+      const pill = document.getElementById('verdictPill');
+      const reason = document.getElementById('primaryReason');
+      const trace = document.getElementById('verdictTrace');
+      const cf = document.getElementById('counterfactual');
+
+      card.style.display = 'block';
+      pill.className = `verdict-pill ${data.decision.replace('AUTO_', '').replace('NEEDS_', '')}`;
+      pill.textContent = data.decision_label;
+      reason.textContent = data.primary_reason;
+
+      trace.innerHTML = `&gt; Verdict: ${data.decision_label} [${data.primary_reason}]<br>&gt; Run ID: ${data.run_id} | Timestamp: ${new Date().toLocaleTimeString()}`;
+
+      if (data.counterfactual) {
+        cf.style.display = 'block';
+        cf.innerHTML = `<strong>Counterfactual:</strong> ${data.counterfactual}`;
+      } else {
+        cf.style.display = 'none';
+      }
+
+      if (data.vendor_email_draft) {
+        document.getElementById('emailCard').style.display = 'block';
+        document.getElementById('emailContent').textContent = data.vendor_email_draft;
+      }
+    }
+
+    function copyEmail() {
+      const text = document.getElementById('emailContent').textContent;
+      navigator.clipboard.writeText(text);
+      alert('Vendor email copied to clipboard!');
+    }
+
+    async function exportCurrentMemo() {
+      if (!lastRunDoneData || !lastRunDoneData.run_id) {
+        alert('No completed run to export.');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/runs/${lastRunDoneData.run_id}/export`);
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audit_memo_${lastRunDoneData.run_id}.json`;
+        a.click();
+      } catch (e) {
+        alert('Export failed: ' + e.message);
+      }
+    }
+    async function openPolicyModal() {
+      document.getElementById('policyModal').style.display = 'flex';
+      switchRagTab('rules');
+      loadRagRules();
+    }
+
+    function closePolicyModal() {
+      document.getElementById('policyModal').style.display = 'none';
+    }
+
+    function switchRagTab(tab) {
+      document.getElementById('ragTabRules').style.display = tab === 'rules' ? 'block' : 'none';
+      document.getElementById('ragTabSearch').style.display = tab === 'search' ? 'block' : 'none';
+      document.getElementById('ragTabNew').style.display = tab === 'new' ? 'block' : 'none';
+      document.getElementById('btnTabRules').className = tab === 'rules' ? 'tab-btn active' : 'tab-btn';
+      document.getElementById('btnTabSearch').className = tab === 'search' ? 'tab-btn active' : 'tab-btn';
+      document.getElementById('btnTabNew').className = tab === 'new' ? 'tab-btn active' : 'tab-btn';
+    }
+
+    async function loadRagRules() {
+      const container = document.getElementById('policyListContent');
+      container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;"><span class="spinner"></span> Loading dynamic vector rules...</div>';
+      try {
+        const res = await fetch('/api/rag/rules');
+        const data = await res.json();
+        const rules = data.rules || [];
+        if (!rules.length) {
+          container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">No active clauses in RAG store.</p>';
+          return;
+        }
+        let html = '';
+        rules.forEach(r => {
+          html += `
+            <div style="background:#0d121f;border:1px solid #1e2738;border-radius:8px;padding:12px 14px;position:relative;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:6px;">
+                <div>
+                  <strong style="color:var(--accent);font-family:var(--mono);">${r.id}</strong>
+                  <span style="color:#fff;font-weight:600;margin-left:6px;font-size:0.88rem;">${r.title}</span>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span style="font-size:0.72rem;background:#1f293d;color:#93c5fd;padding:2px 8px;border-radius:4px;">Scope: <strong>${r.vendor_scope || 'ALL'}</strong></span>
+                  <span style="font-size:0.72rem;background:#1e3a5f;color:#60a5fa;padding:2px 8px;border-radius:4px;">Cap: $${r.max_allowable_usd || 500} (${r.max_allowable_pct || 10}%)</span>
+                  <button onclick="deleteRagRule('${r.id}')" style="background:#3b1e28;color:#f87171;border:1px solid #7f1d1d;padding:2px 6px;border-radius:4px;font-size:0.72rem;cursor:pointer;">Delete</button>
+                </div>
+              </div>
+              <p style="font-size:0.8rem;color:#cbd5e1;line-height:1.45;margin:6px 0;">${r.content}</p>
+              <div style="font-size:0.72rem;color:var(--text-muted);">
+                Category: <code>${r.category || 'general'}</code>
+              </div>
+            </div>`;
+        });
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = '<div style="color:var(--danger);">Failed to load RAG rules: ' + e.message + '</div>';
+      }
+    }
+
+    async function deleteRagRule(ruleId) {
+      if (!confirm(`Delete rule ${ruleId} from dynamic RAG knowledge store?`)) return;
+      try {
+        const res = await fetch(`/api/rag/rules/${ruleId}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadRagRules();
+        } else {
+          alert('Delete failed');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    async function testRagSearch() {
+      const q = document.getElementById('ragSearchQuery').value.trim();
+      const vendor = document.getElementById('ragSearchVendor').value.trim();
+      const resultsContainer = document.getElementById('ragSearchResults');
+      if (!q) {
+        alert('Please enter a search query');
+        return;
+      }
+      resultsContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;"><span class="spinner"></span> Running vector similarity search...</div>';
+      try {
+        const res = await fetch('/api/rag/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q, vendor: vendor || null, top_k: 3 })
+        });
+        const data = await res.json();
+        const items = data.results || [];
+        if (!items.length) {
+          resultsContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:12px;background:#0d121f;border-radius:6px;">No clauses exceeded similarity threshold for this query.</div>';
+          return;
+        }
+        let html = '';
+        items.forEach((it, idx) => {
+          const pct = Math.round(it.similarity_score * 100);
+          const scoreColor = pct >= 50 ? '#34d399' : '#fbbf24';
+          html += `
+            <div style="background:#0d121f;border:1px solid #1e2738;border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <div>
+                  <span style="font-size:0.75rem;background:#1f293d;color:#93c5fd;padding:2px 6px;border-radius:4px;margin-right:6px;">#${idx+1} Rank</span>
+                  <strong style="color:var(--accent);font-family:var(--mono);">${it.id}</strong> — <span style="color:#fff;font-weight:600;">${it.title}</span>
+                </div>
+                <span style="font-size:0.8rem;font-weight:700;color:${scoreColor};background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:4px;border:1px solid ${scoreColor};">
+                  ${pct}% Match
+                </span>
+              </div>
+              <p style="font-size:0.8rem;color:#cbd5e1;margin:6px 0;line-height:1.4;">${it.content}</p>
+              <div style="display:flex;gap:12px;font-size:0.72rem;color:var(--text-muted);">
+                <span>Scope: <strong>${it.vendor_scope || 'ALL'}</strong></span>
+                <span>Max Allowance: <strong>$${it.max_allowable_usd} (${it.max_allowable_pct}%)</strong></span>
+              </div>
+            </div>`;
+        });
+        resultsContainer.innerHTML = html;
+      } catch (e) {
+        resultsContainer.innerHTML = '<div style="color:var(--danger);">Search error: ' + e.message + '</div>';
+      }
+    }
+
+    async function submitNewRagRule(e) {
+      e.preventDefault();
+      const newRule = {
+        id: document.getElementById('newRuleId').value.trim() || undefined,
+        title: document.getElementById('newRuleTitle').value.trim(),
+        category: document.getElementById('newRuleCategory').value.trim() || 'general',
+        vendor_scope: document.getElementById('newRuleVendor').value.trim() || 'ALL',
+        content: document.getElementById('newRuleContent').value.trim(),
+        max_allowable_usd: parseFloat(document.getElementById('newRuleMaxUsd').value) || 500.0,
+        max_allowable_pct: parseFloat(document.getElementById('newRuleMaxPct').value) || 10.0
+      };
+      if (!newRule.title || !newRule.content) {
+        alert('Title and Content are required');
+        return;
+      }
+      try {
+        const res = await fetch('/api/rag/rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newRule)
+        });
+        if (res.ok) {
+          alert('Dynamic rule published to RAG vector knowledge base!');
+          document.getElementById('newRuleForm').reset();
+          switchRagTab('rules');
+          loadRagRules();
+        } else {
+          alert('Failed to save rule');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+  </script>
+
+  <!-- Dynamic RAG Finance Policy & Contract Knowledge Base Modal -->
+  <div class="modal-overlay" id="policyModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;">
+    <div style="background:#111827;border:1px solid var(--card-border);border-radius:14px;max-width:820px;width:92%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+      
+      <!-- Modal Header -->
+      <div style="padding:16px 20px;border-bottom:1px solid var(--card-border);display:flex;justify-content:space-between;align-items:center;background:#0d121f;">
+        <div>
+          <h3 style="font-size:1.05rem;color:#fff;margin:0;display:flex;align-items:center;gap:8px;">
+            <span>📜</span> Enterprise Finance Rules & Dynamic RAG Knowledge Base
+          </h3>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin:2px 0 0 0;">
+            Real-time vector indexing of contract riders, freight allowances, and discount policies.
+          </p>
+        </div>
+        <button style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;" onclick="closePolicyModal()">&times;</button>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div style="display:flex;gap:4px;padding:8px 20px;background:#131c2e;border-bottom:1px solid var(--card-border);">
+        <button id="btnTabRules" class="tab-btn active" onclick="switchRagTab('rules')">Active Clauses (${rules.length || '4'})</button>
+        <button id="btnTabSearch" class="tab-btn" onclick="switchRagTab('search')">🔍 Vector Search Playground</button>
+        <button id="btnTabNew" class="tab-btn" onclick="switchRagTab('new')">➕ Add Dynamic Clause / Rider</button>
+      </div>
+
+      <!-- Tab 1: Rules List -->
+      <div id="ragTabRules" style="padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;flex:1;">
+        <div id="policyListContent"></div>
+      </div>
+
+      <!-- Tab 2: Vector Search Playground -->
+      <div id="ragTabSearch" style="padding:18px 20px;overflow-y:auto;display:none;flex:1;">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">
+          Test semantic retrieval against active finance rules. Enter any messy line item, vendor surcharge note, or payment deduction.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 200px auto;gap:10px;margin-bottom:14px;">
+          <input type="text" id="ragSearchQuery" placeholder="e.g. liftgate and expedited freight surcharge" style="background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px 12px;border-radius:6px;font-size:0.85rem;">
+          <input type="text" id="ragSearchVendor" placeholder="Vendor scope (optional)" style="background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px 12px;border-radius:6px;font-size:0.85rem;">
+          <button onclick="testRagSearch()" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:600;font-size:0.85rem;cursor:pointer;">Search</button>
+        </div>
+        <div id="ragSearchResults"></div>
+      </div>
+
+      <!-- Tab 3: Add Dynamic Rule -->
+      <div id="ragTabNew" style="padding:18px 20px;overflow-y:auto;display:none;flex:1;">
+        <form id="newRuleForm" onsubmit="submitNewRagRule(event)" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Clause ID (optional)</label>
+              <input type="text" id="newRuleId" placeholder="e.g. RAG-CONT-005" style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;font-family:var(--mono);">
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Clause / Rider Title *</label>
+              <input type="text" id="newRuleTitle" placeholder="e.g. Acme Q4 Expedited Delivery Rider" required style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Category</label>
+              <input type="text" id="newRuleCategory" placeholder="e.g. freight, discounts, fuel" value="freight" style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;">
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Vendor Scope</label>
+              <input type="text" id="newRuleVendor" placeholder="e.g. ALL or Global Logistics Co" value="ALL" style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Max USD ($)</label>
+                <input type="number" id="newRuleMaxUsd" value="500" style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;">
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Max Pct (%)</label>
+                <input type="number" id="newRuleMaxPct" value="10" style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Contract Clause / Policy Text (for Vector Embedding & Grounding) *</label>
+            <textarea id="newRuleContent" rows="3" placeholder="Describe authorization conditions, surcharge allowances, or pricing variation tolerances..." required style="width:100%;background:#0d121f;border:1px solid #1e2738;color:#fff;padding:8px;border-radius:6px;font-size:0.82rem;font-family:sans-serif;resize:vertical;"></textarea>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+            <button type="submit" style="background:#10b981;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-weight:600;font-size:0.85rem;cursor:pointer;">Save & Ingest into RAG Store</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

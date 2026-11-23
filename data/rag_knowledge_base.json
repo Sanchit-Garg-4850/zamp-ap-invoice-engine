@@ -1,0 +1,38 @@
+[
+  {
+    "id": "RAG-POL-001",
+    "title": "Corporate Freight & Logistics Surcharge Policy",
+    "category": "freight",
+    "vendor_scope": "ALL",
+    "content": "Standard dry-van, LTL, and liftgate freight surcharges are authorized up to 12% or $500.00 maximum over subtotal. Must be identified in document body or transport notes.",
+    "max_allowable_usd": 500.0,
+    "max_allowable_pct": 12.0
+  },
+  {
+    "id": "RAG-POL-002",
+    "title": "Vendor Settlement Discounts & Early Payment Terms",
+    "category": "discounts",
+    "vendor_scope": "ALL",
+    "content": "Approved vendor prompt payment terms (e.g. 2/10 Net 30) and volume promotional discounts are allowable deductions up to 15% of total. Reconcile as allowable credits.",
+    "max_allowable_usd": 1000.0,
+    "max_allowable_pct": 15.0
+  },
+  {
+    "id": "RAG-CONT-003",
+    "title": "TechParts Master Services Agreement Rider (Hardware Replacements)",
+    "category": "contract_amendment",
+    "vendor_scope": "TechParts International",
+    "content": "TechParts International contract amendment Q1 2024: Component price fluctuations due to global DRAM/SSD shortages are permitted up to 3.0% tolerance against PO remaining balance.",
+    "max_allowable_usd": 750.0,
+    "max_allowable_pct": 3.0
+  },
+  {
+    "id": "RAG-POL-004",
+    "title": "Fuel Surcharge Emergency Allowance",
+    "category": "fuel_surcharges",
+    "vendor_scope": "Global Logistics Co",
+    "content": "Global Logistics Co carrier agreement allows supplementary diesel fuel surcharges calculated weekly, capped at 10% of total transport cost.",
+    "max_allowable_usd": 350.0,
+    "max_allowable_pct": 10.0
+  }
+]

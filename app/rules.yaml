@@ -1,0 +1,104 @@
+# rules.yaml — All thresholds and reason codes for the invoice pipeline
+# Change these values to tune behaviour without touching code.
+# Every run snapshots this file into the audit table.
+
+version: "1.0.0"
+
+# ── Tolerance bands (percentage variance vs PO remaining balance) ─────────────
+# Apply per vendor; defaults apply when vendor has no override.
+tolerance:
+  default_ok_pct: 2.0        # <= this => PASS (TOL_001)
+  default_review_pct: 10.0   # <= this => REVIEW (TOL_002)
+  # > default_review_pct    => REJECT (TOL_003)
+
+# ── Vendor fuzzy match ───────────────────────────────────────────────────────
+vendor:
+  match_ok_threshold: 85       # >= this score => treat as matched
+  match_review_threshold: 60   # >= this => REVIEW (VND_002), else REJECT (VND_001)
+
+# ── PO matching ──────────────────────────────────────────────────────────────
+po_match:
+  explicit_ref_weight: 50      # bonus score when invoice contains a PO number string
+  amount_weight: 30            # partial score for amount closeness
+  vendor_weight: 20            # partial score for vendor match
+  min_confidence: 60           # below this => PO_001 REVIEW
+
+# ── Near-duplicate detection ─────────────────────────────────────────────────
+duplicate:
+  invoice_no_edit_distance: 2  # DUP_002 fires when Levenshtein distance <= this
+
+# ── Semantic Reconciliation Rules (Mutable Policy) ───────────────────────────
+reconciliation:
+  max_unbundled_variance_pct: 15.0   # Discrepancies up to this % trigger semantic investigation
+  allowed_surcharges:
+    - "shipping"
+    - "freight"
+    - "handling"
+    - "delivery"
+    - "fuel surcharge"
+    - "logistics"
+    - "expedited fee"
+    - "liftgate"
+  allowed_deductions:
+    - "discount"
+    - "rebate"
+    - "early payment discount"
+    - "promotional credit"
+    - "volume discount"
+
+# ── Reason codes ─────────────────────────────────────────────────────────────
+# result: REJECT | REVIEW | PASS
+reason_codes:
+  EXT_001:
+    desc: "Missing critical field (invoice number, date, or total)"
+    result: REVIEW
+    draft_vendor_email: true
+  VAL_001:
+    desc: "Line items do not sum to subtotal"
+    result: REVIEW
+    draft_vendor_email: false
+  VAL_002:
+    desc: "Subtotal plus tax does not match total"
+    result: REVIEW
+    draft_vendor_email: false
+  VAL_003:
+    desc: "Mathematical variance reconciled via semantic surcharge/discount analysis"
+    result: PASS
+    draft_vendor_email: false
+  VND_001:
+    desc: "Vendor not found in approved master"
+    result: REJECT
+    draft_vendor_email: false
+  VND_002:
+    desc: "Vendor fuzzy match confidence below threshold"
+    result: REVIEW
+    draft_vendor_email: false
+  DUP_001:
+    desc: "Duplicate invoice detected (file hash or vendor+invoice number)"
+    result: REJECT
+    draft_vendor_email: false
+  DUP_002:
+    desc: "Near-duplicate: same vendor, amount and date, invoice number within edit distance 2"
+    result: REVIEW
+    severity: high
+    draft_vendor_email: false
+  PO_001:
+    desc: "No PO reference and no confident match found"
+    result: REVIEW
+    draft_vendor_email: true
+  PO_002:
+    desc: "Implied PO match confidence below threshold"
+    result: REVIEW
+    draft_vendor_email: false
+  TOL_001:
+    desc: "Invoice amount within tolerance of PO remaining balance"
+    result: PASS
+    draft_vendor_email: false
+  TOL_002:
+    desc: "Invoice amount in review band (above tolerance, below upper limit)"
+    result: REVIEW
+    draft_vendor_email: false
+  TOL_003:
+    desc: "Invoice amount exceeds upper variance limit against PO remaining balance"
+    result: REJECT
+    draft_vendor_email: false

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zamp — AP Operations Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(17, 24, 39, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    nav { display: flex; align-items: center; gap: 8px; }
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    nav a.active, nav a:hover {
+      color: #fff;
+      background: var(--card-border);
+    }
+
+    main {
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 24px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* KPI Metrics Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .kpi-val {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .kpi-val.green { color: var(--success); }
+    .kpi-val.yellow { color: var(--warning); }
+    .kpi-val.red { color: var(--danger); }
+    .kpi-val.blue { color: var(--accent); }
+
+    /* Controls: Filter & Search */
+    .controls-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .filter-tab {
+      background: #1f293d;
+      border: 1px solid #374151;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .filter-tab.active, .filter-tab:hover {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .search-input {
+      background: #0d121f;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      width: 240px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    .btn-secondary {
+      background: #1f293d;
+      border: 1px solid #374151;
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-secondary:hover { background: #27354f; border-color: var(--accent); }
+
+    /* Runs Table */
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    th {
+      background: #162032;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid #1f293d;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr.clickable:hover {
+      background: rgba(31, 41, 55, 0.5);
+      cursor: pointer;
+    }
+
+    .badge-decision {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-transform: uppercase;
+    }
+    .badge-decision.AUTO_APPROVE { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+    .badge-decision.NEEDS_REVIEW { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+    .badge-decision.REJECT { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+
+    .btn-override {
+      background: #1f293d;
+      border: 1px solid #374151;
+      color: var(--text);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-override:hover {
+      border-color: var(--accent);
+      background: #27354f;
+    }
+
+    /* Modal for Trace & Override */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-box {
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      max-width: 760px;
+      width: 90%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-trace-item {
+      background: #0d121f;
+      border: 1px solid #1e2738;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .trace-title {
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .override-form {
+      background: #162032;
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .override-form input, .override-form select, .override-form textarea {
+      background: #0d121f;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>Zamp</span>
+      <span class="brand-badge">AP AI Engine</span>
+      <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 400; margin-left: 6px;">Audit & Run History</span>
+    </div>
+    <nav>
+      <a href="/">Live Run View</a>
+      <a href="/dashboard" class="active">Dashboard & History</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <span class="kpi-label">Total Processed</span>
+        <span class="kpi-val blue" id="kpiTotal">--</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Auto-Approved</span>
+        <span class="kpi-val green" id="kpiApproved">--</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Needs Review</span>
+        <span class="kpi-val yellow" id="kpiReview">--</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Rejected</span>
+        <span class="kpi-val red" id="kpiRejected">--</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Straight-Through %</span>
+        <span class="kpi-val green" id="kpiRate">--%</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-panel">
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('ALL', this)">All Runs</button>
+        <button class="filter-tab" onclick="setFilter('AUTO_APPROVE', this)">Approved</button>
+        <button class="filter-tab" onclick="setFilter('NEEDS_REVIEW', this)">Needs Review</button>
+        <button class="filter-tab" onclick="setFilter('REJECT', this)">Rejected</button>
+      </div>
+
+      <div class="right-controls">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by file or reason..." oninput="renderTable()">
+        <button class="btn-secondary" onclick="exportAllRuns()">📥 Export JSON</button>
+        <button class="btn-secondary" style="color:#f87171;" onclick="resetDB()">🧹 Reset DB</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>File</th>
+            <th>Timestamp</th>
+            <th>Status</th>
+            <th>Decision</th>
+            <th>Primary Reason</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="runsTableBody">
+          <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading runs...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Run Details</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="modalTraceContent"></div>
+
+        <!-- Override Panel -->
+        <div class="override-form">
+          <h4 style="font-size:0.9rem;">Human-in-the-Loop Override</h4>
+          <p style="font-size:0.78rem;color:var(--text-muted);">As an AP auditor, you can override this machine decision. All changes are logged into the immutable audit trail.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <input type="text" id="overrideReviewer" placeholder="Auditor Name (e.g. Jane Doe)">
+            <select id="overrideDecision">
+              <option value="AUTO_APPROVE">AUTO APPROVE</option>
+              <option value="NEEDS_REVIEW">NEEDS REVIEW</option>
+              <option value="REJECT">REJECT</option>
+            </select>
+          </div>
+          <textarea id="overrideNote" rows="2" placeholder="Audit note explaining the reason for override..."></textarea>
+          <button class="btn-override" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;font-weight:600;" onclick="submitOverride()">Save Decision Override</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allRuns = [];
+    let currentFilter = 'ALL';
+    let activeRunId = null;
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/runs');
+        allRuns = await res.json();
+        updateKPIs();
+        renderTable();
+      } catch (err) {
+        console.error('Failed to load runs:', err);
+      }
+    }
+
+    function updateKPIs() {
+      const total = allRuns.length;
+      const approved = allRuns.filter(r => r.decision === 'AUTO_APPROVE').length;
+      const review = allRuns.filter(r => r.decision === 'NEEDS_REVIEW').length;
+      const rejected = allRuns.filter(r => r.decision === 'REJECT').length;
+      const rate = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+      document.getElementById('kpiTotal').textContent = total;
+      document.getElementById('kpiApproved').textContent = approved;
+      document.getElementById('kpiReview').textContent = review;
+      document.getElementById('kpiRejected').textContent = rejected;
+      document.getElementById('kpiRate').textContent = `${rate}%`;
+    }
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('runsTableBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+
+      let filtered = allRuns.filter(r => {
+        const matchFilter = currentFilter === 'ALL' || r.decision === currentFilter;
+        const matchSearch = !search || 
+          (r.filename && r.filename.toLowerCase().includes(search)) ||
+          (r.run_id && r.run_id.toLowerCase().includes(search)) ||
+          (r.primary_reason && r.primary_reason.toLowerCase().includes(search));
+        return matchFilter && matchSearch;
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">No matching runs found.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(r => {
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleTimeString() : '--';
+        const decClass = r.decision || 'PENDING';
+        html += `
+          <tr class="clickable" onclick="openRunDetails('${r.run_id}')">
+            <td style="font-family: var(--mono); color: var(--accent);">${r.run_id}</td>
+            <td><strong>${r.filename}</strong></td>
+            <td style="color: var(--text-muted);">${dateStr}</td>
+            <td><span style="font-size:0.75rem; color:#9ca3af;">${r.status}</span></td>
+            <td><span class="badge-decision ${decClass}">${r.decision || 'PENDING'}</span></td>
+            <td style="font-family: var(--mono); font-size: 0.8rem;">${r.primary_reason || '--'}</td>
+            <td>
+              <button class="btn-override" onclick="event.stopPropagation(); openRunDetails('${r.run_id}')">Audit / Override</button>
+            </td>
+          </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    async function openRunDetails(runId) {
+      activeRunId = runId;
+      document.getElementById('modalTitle').textContent = `Run Details: ${runId}`;
+      document.getElementById('modal').style.display = 'flex';
+      const container = document.getElementById('modalTraceContent');
+      container.innerHTML = '<div style="color:var(--text-muted);">Loading full trace...</div>';
+
+      try {
+        const res = await fetch(`/api/runs/${runId}`);
+        const data = await res.json();
+        
+        let html = '';
+        data.events.forEach(ev => {
+          const payload = ev.payload || {};
+          let checksHtml = '';
+          if (payload.checks && payload.checks.length) {
+            checksHtml = payload.checks.map(c => `
+              <div style="font-size:0.78rem;padding:3px 0;color:#cbd5e1;">
+                • <strong>${c.rule_id || 'RULE'}:</strong> ${c.detail || c.desc || ''} 
+                <span style="color:${c.result==='PASS'?'#34d399':(c.result==='REJECT'?'#f87171':'#fbbf24')}">[${c.result}]</span>
+              </div>
+            `).join('');
+          }
+
+          html += `
+            <div class="modal-trace-item">
+              <div class="trace-title">
+                <span>Stage: ${ev.stage.toUpperCase()} (${ev.status})</span>
+                <span style="color:var(--text-muted);font-size:0.75rem;">${ev.duration_ms}ms</span>
+              </div>
+              ${checksHtml || '<div style="font-size:0.75rem;color:var(--text-muted);">No exceptions recorded</div>'}
+            </div>`;
+        });
+
+        container.innerHTML = html;
+        if (data.run && data.run.decision) {
+          document.getElementById('overrideDecision').value = data.run.decision;
+        }
+      } catch (err) {
+        container.innerHTML = `<div style="color:var(--danger);">Error loading trace: ${err.message}</div>`;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      activeRunId = null;
+    }
+
+    async function submitOverride() {
+      if (!activeRunId) return;
+      const reviewer = document.getElementById('overrideReviewer').value.trim();
+      const new_decision = document.getElementById('overrideDecision').value;
+      const note = document.getElementById('overrideNote').value.trim();
+
+      if (!reviewer) {
+        alert('Please enter auditor name');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/runs/${activeRunId}/override`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reviewer, new_decision, note })
+        });
+        if (res.ok) {
+          alert('Override saved successfully!');
+          closeModal();
+          loadDashboard();
+        } else {
+          alert('Failed to save override');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function exportAllRuns() {
+      const blob = new Blob([JSON.stringify(allRuns, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `zamp_ap_audit_history_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    async function resetDB() {
+      if (!confirm('Are you sure you want to reset the database? This will clear all run history and re-seed clean master data.')) return;
+      try {
+        const res = await fetch('/api/reset-db', { method: 'POST' });
+        if (res.ok) {
+          alert('Database reset and re-seeded successfully!');
+          loadDashboard();
+        }
+      } catch (e) {
+        alert('Reset failed: ' + e.message);
+      }
+    }
+
+    // Auto-refresh every 5s
+    setInterval(loadDashboard, 5000);
+    loadDashboard();
+  </script>
+</body>
+</html>
