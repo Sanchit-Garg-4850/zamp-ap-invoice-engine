@@ -1,6 +1,9 @@
 # Autonomous Accounts Payable (AP) Invoice Processing Engine
 ### Production-Grade AI Pipeline: From Unstructured PDF to Auditable Decision
 
+🌐 **Live 24/7 Deployment:** [https://zamp-ap-invoice-engine.onrender.com/](https://zamp-ap-invoice-engine.onrender.com/)  
+📊 **AP Operations Dashboard:** [https://zamp-ap-invoice-engine.onrender.com/dashboard](https://zamp-ap-invoice-engine.onrender.com/dashboard)
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Sanchit-Garg-4850/zamp-ap-invoice-engine)
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green?logo=fastapi)
